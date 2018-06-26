@@ -43,8 +43,8 @@ export default class IQO {
         scale = 1
       }
 
-      let width = image.width * scale
-      let height = image.height * scale
+      let width = image.width * scale / 100
+      let height = image.height * scale / 100
 
       this.canvas.width = width
       this.canvas.height = height
