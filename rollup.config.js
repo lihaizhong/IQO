@@ -2,9 +2,9 @@ import JSONPlugin from 'rollup-plugin-json'
 import babelPlugin from 'rollup-plugin-babel'
 
 export default {
-  input: 'src/IQO/index.js',
+  input: 'index.js',
   output: {
-    file: 'package/IQO/index.js',
+    file: 'dist/index.min.js',
     name: 'IQO',
     format: 'umd'
   },
