@@ -9,8 +9,6 @@
 import 'blueimp-canvas-to-blob'
 
 export default class IQO {
-  standard = 600
-
   constructor (standard) {
     this.canvas = document.createElement('canvas')
     this.ctx = this.canvas.getContext('2d')
@@ -20,6 +18,8 @@ export default class IQO {
 
     if (!isNaN(standard) && standard > 0) {
       this.standard = standard
+    } else {
+      this.standard = 600
     }
   }
 
