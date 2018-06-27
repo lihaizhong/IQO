@@ -36,8 +36,6 @@ export default class IQO {
   // 测试结果：在图片质量调至45、原图宽高在1000左右的情况下，图片大小下降近5倍
   _drawImage (image, type, quality, scale) {
     return new Promise(resolve => {
-      let rate = image.width / image.height
-
       // Optimize: 缩小体积以减小图片大小
       if (image.width < this.standard && image.height < this.standard) {
         scale = 1
