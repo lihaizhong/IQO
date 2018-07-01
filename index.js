@@ -7,7 +7,6 @@
 */
 
 import 'blueimp-canvas-to-blob'
-
 export default class IQO {
   constructor (standard) {
     this.canvas = document.createElement('canvas')
@@ -30,6 +29,12 @@ export default class IQO {
       image.onload = () => resolve(image)
       image.onerror = (error) => reject(error)
       image.src = url
+
+      // 确保缓存的图片也能触发onload事件
+      if (image.complete || image.complete === 'undefined') {
+        image.src = 'data:image/jpeg;base64,clean' + new Date()
+        image.src = url
+      }
     })
   }
 
@@ -47,11 +52,13 @@ export default class IQO {
       this.canvas.width = width
       this.canvas.height = height
       // 在canvas中绘制图片
-      this.ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height)
+      this.ctx.drawImage(image, 0, 0, image.width, image.height)
       // 将图片转换成Blob对象
       this.canvas.toBlob(
         // Optimize: 改变图片质量以减小图片体积
-        (blob) => resolve(blob), type, quality / 100)
+        // Note: quality只有jpg和webp格式才有效
+        blob => resolve(blob), type, quality / 100
+      )
     })
   }
 
@@ -70,21 +77,25 @@ export default class IQO {
 
     let url = window.URL.createObjectURL(file)
     return this._file2Image(url)
-      .then((image) => {
-        return this._drawImage(image, type, quality, scale)
-          .then((blob) => {
-            // test(blob, file)
-            window.URL.revokeObjectURL(url)
-            return blob.size < file.size ? blob : file
-          })
-          .catch((error) => {
-            window.URL.revokeObjectURL(url)
-            throw error
-          })
+      .then(image => this._drawImage(image, type, quality, scale))
+      .then(blob => {
+        // test(blob, file)
+        window.URL.revokeObjectURL(url)
+        return blob.size < file.size ? blob : file
       })
-      .catch((error) => {
+      .catch(error => {
         window.URL.revokeObjectURL(url)
         throw error
       })
   }
 }
+
+// function test (blob, file) {
+//   let url = window.URL.createObjectURL(blob)
+//   console.log('压缩前：' + file.size)
+//   console.log('压缩后：' + blob.size)
+
+//   let $$image = document.createElement('img')
+//   $$image.src = url
+//   document.body.appendChild($$image)
+// }
