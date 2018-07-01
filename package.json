@@ -1,6 +1,6 @@
 {
   "name": "iqo",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "图片压缩",
   "main": "index.js",
   "repository": {
