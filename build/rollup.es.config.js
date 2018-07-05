@@ -8,10 +8,7 @@ export default {
   output: {
     file: 'dist/index.es.js',
     name: 'IQO',
-    format: 'es',
-    globals: {
-      IQO: 'IQO'
-    }
+    format: 'es'
   },
   plugins: [
     JSONPlugin(),
@@ -19,12 +16,7 @@ export default {
       exclude: 'node_modules/**',
       runtimeHelpers: true
     }),
-    resolvePlugin({
-      jsnext: true,
-      main: true,
-      browser: true,
-      module: true
-    }),
+    resolvePlugin(),
     commonjsPlugin({
       include: 'node_modules/**'
     })
