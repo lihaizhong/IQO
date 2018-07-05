@@ -165,7 +165,7 @@ var IQO = function () {
         $$image.onload = function () {
           return resolve($$image);
         };
-        $$image.onerror = function (error) {
+        $$image.onerror = function () {
           return reject(new Error(_this.prefix + 'image loading failed!'));
         };
         $$image.src = url;

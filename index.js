@@ -49,7 +49,7 @@ export default class IQO {
       }
 
       $$image.onload = () => resolve($$image)
-      $$image.onerror = (error) => reject(new Error(this.prefix + 'image loading failed!'))
+      $$image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
       $$image.src = url
 
       // 确保缓存的图片也能触发onload事件
