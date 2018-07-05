@@ -14,13 +14,13 @@ import 'blueimp-canvas-to-blob'
  */
 function IQO (standard) {
   this.prefix = '[IQO]'
-    this._URLCompat()
+  this._URLCompat()
 
-    if (!isNaN(standard) && standard > 0) {
-      this.standard = standard
-    } else {
-      this.standard = 600
-    }
+  if (!isNaN(standard) && standard > 0) {
+    this.standard = standard
+  } else {
+    this.standard = 600
+  }
 }
 
 var internal = IQO.prototype = {}
