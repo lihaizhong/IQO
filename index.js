@@ -8,12 +8,13 @@
 
 import 'blueimp-canvas-to-blob'
 export default class IQO {
+  /**
+   * 构造函数
+   * @param {Number} standard 基准值，表示是否需要进行缩放操作。默认：600
+   */
   constructor (standard) {
-    this.canvas = document.createElement('canvas')
-    this.ctx = this.canvas.getContext('2d')
-    if (!window.URL) {
-      window.URL = window.webkitURL || window.mozURL
-    }
+    this.prefix = '[IQO]'
+    this._URLCompat()
 
     if (!isNaN(standard) && standard > 0) {
       this.standard = standard
@@ -22,43 +23,80 @@ export default class IQO {
     }
   }
 
+  _URLCompat () {
+    if (window.URL) {
+      this.URL = window.URL
+    } else if (window.webkitURL) {
+      this.URL = window.webkitURL
+    } else if (window.mozURL) {
+      this.URL = window.mozURL
+    } else if (window.msURL) {
+      this.URL = window.msURL
+    } else {
+      throw new Error(this.prefix + '`window.URL` is not support! please update your browser.')
+    }
+  }
+
   _file2Image (url) {
     return new Promise((resolve, reject) => {
-      let image = new Image()
+      let $$image
+      if (this.image) {
+        $$image = this.image
+      } else {
+        $$image = this.image = document.createElement('img')
+        $$image.style.display = 'none'
+        document.body.append($$image)
+      }
 
-      image.onload = () => resolve(image)
-      image.onerror = (error) => reject(error)
-      image.src = url
+      $$image.onload = () => resolve($$image)
+      $$image.onerror = (error) => reject(new Error(this.prefix + 'image loading failed!'))
+      $$image.src = url
 
       // 确保缓存的图片也能触发onload事件
-      if (image.complete || image.complete === 'undefined') {
-        image.src = 'data:image/jpeg;base64,clean' + new Date()
-        image.src = url
+      if ($$image.complete || $$image.complete === 'undefined') {
+        $$image.src = 'data:image/jpeg;base64,clean' + new Date()
+        $$image.src = url
       }
     })
   }
 
   // 测试结果：在图片质量调至45、原图宽高在1000左右的情况下，图片大小下降近5倍
   _drawImage (image, type, quality, scale) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       // Optimize: 缩小体积以减小图片大小
       if (image.width < this.standard && image.height < this.standard) {
         scale = 1
       }
 
+      let $$canvas
+      let ctx
+      if (this.canvas) {
+        $$canvas = this.canvas
+        ctx = this.ctx
+      } else {
+        $$canvas = this.canvas = document.createElement('canvas')
+        ctx = this.ctx = $$canvas.getContext('2d')
+      }
+
       let width = image.width * scale / 100
       let height = image.height * scale / 100
 
-      this.canvas.width = width
-      this.canvas.height = height
-      // 在canvas中绘制图片
-      this.ctx.drawImage(image, 0, 0, image.width, image.height)
-      // 将图片转换成Blob对象
-      this.canvas.toBlob(
-        // Optimize: 改变图片质量以减小图片体积
-        // Note: quality只有jpg和webp格式才有效
-        blob => resolve(blob), type, quality / 100
-      )
+      $$canvas.width = width
+      $$canvas.height = height
+      try {
+        // 在canvas中绘制图片
+        ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height)
+        // 将图片转换成base64
+        // Note: quality属性只有jpg和webp格式才有效
+        $$canvas.toBlob(blob => {
+          // 清除画布
+          ctx.clearRect(0, 0, width, height)
+          resolve(blob)
+        }, type, quality / 100)
+      } catch (ex) {
+        ctx.clearRect(0, 0, width, height)
+        reject(ex)
+      }
     })
   }
 
@@ -75,27 +113,17 @@ export default class IQO {
       scale = 70
     }
 
-    let url = window.URL.createObjectURL(file)
+    let url = this.URL.createObjectURL(file)
+
     return this._file2Image(url)
       .then(image => this._drawImage(image, type, quality, scale))
       .then(blob => {
-        // test(blob, file)
-        window.URL.revokeObjectURL(url)
+        this.URL.revokeObjectURL(url)
         return blob.size < file.size ? blob : file
       })
       .catch(error => {
-        window.URL.revokeObjectURL(url)
+        this.URL.revokeObjectURL(url)
         throw error
       })
   }
 }
-
-// function test (blob, file) {
-//   let url = window.URL.createObjectURL(blob)
-//   console.log('压缩前：' + file.size)
-//   console.log('压缩后：' + blob.size)
-
-//   let $$image = document.createElement('img')
-//   $$image.src = url
-//   document.body.appendChild($$image)
-// }

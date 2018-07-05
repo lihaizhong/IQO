@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <input type="file" id="file">
+  <img src="" id="image">
+  <script src="../dist/index.min.js"></script>
+  <script>
+    var $$file = document.getElementById('file')
+    var $$image = document.getElementById('image')
+
+    $$file.onchange = function (event) {
+      var file = event.target.files[0]
+      event.target.value = ''
+
+      var iqo = new IQO()
+
+      iqo.compress(file, 30, 45)
+        .then(blob => {
+          test(blob, file)
+          var url = window.URL.createObjectURL(blob)
+          $$image.src = url
+        })
+    }
+
+    function test (blob, file) {
+      console.log('压缩前：' + file.size)
+      console.log('压缩后：' + blob.size)
+    }
+  </script>
+</body>
+</html>
