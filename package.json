@@ -12,7 +12,7 @@
   "author": "lihz <854323752@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c build/rollup.config.js",
+    "build": "rollup -c build/rollup.common.config.js",
     "build:es": "rollup -c build/rollup.es.config.js",
     "build:all": "npm run build && npm run build:es"
   },
