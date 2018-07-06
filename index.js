@@ -66,7 +66,7 @@ internal._drawImage = function (image, type, quality, scale) {
   return new Promise((resolve, reject) => {
     // Optimize: 缩小体积以减小图片大小
     if (image.width < this.standard && image.height < this.standard) {
-      scale = 1
+      scale = 100
     }
 
     let $$canvas

@@ -184,7 +184,7 @@ internal._drawImage = function (image, type, quality, scale) {
   return new Promise(function (resolve, reject) {
     // Optimize: 缩小体积以减小图片大小
     if (image.width < _this2.standard && image.height < _this2.standard) {
-      scale = 1;
+      scale = 100;
     }
 
     var $$canvas = void 0;
