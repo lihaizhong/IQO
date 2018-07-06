@@ -6,7 +6,7 @@ import commonjsPlugin from 'rollup-plugin-commonjs'
 export default {
   input: 'index.js',
   output: {
-    file: 'dist/index.es.js',
+    file: 'dist/iqo.es.js',
     name: 'IQO',
     format: 'es'
   },

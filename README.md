@@ -4,7 +4,7 @@
 
 ## Usage
 
-**注意：**如果是使用webpack打包，建议使用`dist/index.es.js`.
+**注意：**如果是使用webpack打包，建议使用`dist/iqo.es.js`.
 
 webpack配置:
 
@@ -13,7 +13,7 @@ module.exports = {
   ...,
   resolve: {
     alias: {
-      'iqo$': 'iqo/dist/index.es.js'
+      'iqo$': 'iqo/dist/iqo.es.js'
     }
   }
   ...

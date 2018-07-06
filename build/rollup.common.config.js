@@ -7,7 +7,7 @@ import { uglify } from 'rollup-plugin-uglify'
 export default {
   input: 'index.js',
   output: {
-    file: 'dist/index.min.js',
+    file: 'dist/iqo.min.js',
     name: 'IQO',
     format: 'umd',
     globals: {
