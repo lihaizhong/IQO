@@ -120,17 +120,12 @@ var canvasToBlob = createCommonjsModule(function (module) {
 
 /**
  * 构造函数
- * @param {Number} standard 基准值，表示是否需要进行缩放操作。默认：600
+ * @param {Number} standard 基准值，表示是否需要进行图片缩放操作。默认：600
  */
 function IQO(standard) {
   this.prefix = '[IQO]';
+  this.standard = !isNaN(standard) && standard > 0 ? standard : 600;
   this._URLCompat();
-
-  if (!isNaN(standard) && standard > 0) {
-    this.standard = standard;
-  } else {
-    this.standard = 600;
-  }
 }
 
 var internal = IQO.prototype = {};
@@ -153,14 +148,16 @@ internal._file2Image = function (url) {
   var _this = this;
 
   return new Promise(function (resolve, reject) {
-    var $$image = void 0;
-    if (_this.image) {
-      $$image = _this.image;
-    } else {
-      $$image = _this.image = document.createElement('img');
-      $$image.style.display = 'none';
-      document.body.append($$image);
-    }
+    var $$image = new Image();
+    // if (this.image) {
+    //   $$image = this.image
+    // } else {
+    //   // FIXBUG: 兼容部分机型不创建真实 IMG DOM，无法实现跨域问题
+    //   $$image = this.image = document.createElement('img')
+    //   $$image.crossOrigin = 'Anonymous'
+    //   $$image.style.display = 'none'
+    //   document.body.append($$image)
+    // }
 
     $$image.onload = function () {
       return resolve($$image);
@@ -184,36 +181,35 @@ internal._drawImage = function (image, type, quality, scale) {
   return new Promise(function (resolve, reject) {
     // Optimize: 缩小体积以减小图片大小
     if (image.width < _this2.standard && image.height < _this2.standard) {
-      scale = 100;
-    }
-
-    var $$canvas = void 0;
-    var ctx = void 0;
-    if (_this2.canvas) {
-      $$canvas = _this2.canvas;
-      ctx = _this2.ctx;
+      scale = 1;
     } else {
-      $$canvas = _this2.canvas = document.createElement('canvas');
-      ctx = _this2.ctx = $$canvas.getContext('2d');
+      scale = scale / 100;
     }
 
-    var width = image.width * scale / 100;
-    var height = image.height * scale / 100;
+    if (!_this2.canvas) {
+      _this2.canvas = document.createElement('canvas');
+      _this2.ctx = _this2.canvas.getContext('2d');
+    }
+
+    var $$canvas = _this2.canvas;
+    var ctx = _this2.ctx;
+
+    var width = image.width * scale;
+    var height = image.height * scale;
 
     $$canvas.width = width;
     $$canvas.height = height;
     try {
-      // 在canvas中绘制图片
+      // 1. 清除画布
+      ctx.clearRect(0, 0, width, height);
+      // 2. 在canvas中绘制图片
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-      // 将图片转换成base64
-      // Note: quality属性只有jpg和webp格式才有效
+      // 3. 将图片转换成base64
+      // NOTE: quality属性只有jpg和webp格式才有效
       $$canvas.toBlob(function (blob) {
-        // 清除画布
-        ctx.clearRect(0, 0, width, height);
-        resolve(blob);
+        return resolve(blob);
       }, type, quality / 100);
     } catch (ex) {
-      ctx.clearRect(0, 0, width, height);
       reject(ex);
     }
   });
@@ -234,12 +230,14 @@ IQO.prototype.compress = function (file, quality, scale) {
     scale = 70;
   }
 
+  // 创建一个url，
   var url = this.URL.createObjectURL(file);
 
   return this._file2Image(url).then(function (image) {
     return _this3._drawImage(image, type, quality, scale);
   }).then(function (blob) {
     _this3.URL.revokeObjectURL(url);
+    // 与原文件比较大小，取最小的那个文件
     return blob.size < file.size ? blob : file;
   }).catch(function (error) {
     _this3.URL.revokeObjectURL(url);
