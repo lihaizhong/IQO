@@ -2,6 +2,15 @@
 
 图片压缩
 
+## Install
+
+```bash
+# npm 安装
+npm install iqo --save-dev 或者 npm i iqo -D
+# yarn 安装
+yarn add iqo --save-dev
+```
+
 ## Usage
 
 **注意：**如果是使用webpack打包，建议使用`dist/iqo.es.js`.
