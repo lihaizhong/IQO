@@ -37,7 +37,8 @@ let file = xxx
 let quality = 55 // 只对webp和jpg图片有效，这是canvas决定的
 let scale = 60
 let iqo = new IQO(standard)
-let newfile = iqo.compress(file, quality, scale)
-
-console.log(file.size, newfile.size)
+iqo.compress(file, quality, scale)
+  .then(newfile => {
+    console.log(file.size, newfile.size)
+  })
 ```
