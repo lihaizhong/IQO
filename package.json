@@ -3,8 +3,8 @@
   "version": "0.1.5",
   "description": "图片压缩",
   "main": "index.js",
-  "browser": "index.min.js",
-  "module": "index.es.js",
+  "browser": "iqo.min.js",
+  "module": "iqo.es.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com:lihaizhong/IQO.git"
