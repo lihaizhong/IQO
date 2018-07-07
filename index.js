@@ -6,7 +6,7 @@
  * @desc 图片质量优化（Image Quality Optimize）
 */
 
-import 'blueimp-canvas-to-blob'
+import toBlob from 'blueimp-canvas-to-blob'
 
 /**
  * 构造函数
@@ -30,43 +30,63 @@ internal._URLCompat = function () {
   } else if (window.msURL) {
     this.URL = window.msURL
   } else {
-    throw new Error(this.prefix + '`window.URL` is not support! please update your browser.')
+    this.URL = null
   }
 }
 
-internal._file2Image = function (url) {
+/**
+ * 文件类型转换为url
+ * @param {file}} file 
+ */
+internal._generateFileURL = function (file) {
   return new Promise((resolve, reject) => {
-    let $$image = new Image()
-    // if (this.image) {
-    //   $$image = this.image
-    // } else {
-    //   // FIXBUG: 兼容部分机型不创建真实 IMG DOM，无法实现跨域问题
-    //   $$image = this.image = document.createElement('img')
-    //   $$image.crossOrigin = 'Anonymous'
-    //   $$image.style.display = 'none'
-    //   document.body.append($$image)
-    // }
+    if (this.URL) {
+      resolve(this.URL.createObjectURL(file))
+    } else if (FileReader) {
+      let fileReader = FileReader()
+      
+      fileReader.onload = function (evt) {
+        resolve(evt.target.result)
+      }
 
-    $$image.onload = () => resolve($$image)
-    $$image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
-    $$image.src = url
+      fileReader.onerror = function (error) {
+        reject(error)
+      }
 
-    // 确保缓存的图片也能触发onload事件
-    if ($$image.complete || $$image.complete === 'undefined') {
-      $$image.src = 'data:image/jpeg;base64,clean' + new Date()
-      $$image.src = url
+      fileReader.toDataURL()
+    } else {
+      reject(new Error('您的浏览器不支持window.URL和FileReader！'))
     }
   })
 }
 
+/**
+ * 文件类型转换为图片类型
+ * @param {base64} url 
+ */
+internal._file2Image = function (url) {
+  return new Promise((resolve, reject) => {
+    let $$image = new Image()
+
+    $$image.onload = () => resolve($$image)
+    $$image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
+    $$image.src = url
+  })
+}
+
+/**
+ * 图片绘制，压缩
+ * @param {image} image 
+ * @param {string} type 
+ * @param {number} quality 
+ * @param {number} scale 
+ */
 internal._drawImage = function (image, type, quality, scale) {
   return new Promise((resolve, reject) => {
-    // Optimize: 缩小体积以减小图片大小
-    if (image.width < this.standard && image.height < this.standard) {
-      scale = 1
-    } else {
-      scale = scale / 100
-    }
+    // OPTIMIZE: 缩小体积以减小图片大小
+    scale = image.width < this.standard && image.height < this.standard ? 1 : scale / 100
+    // OPTIMIZE: 减少质量以减小图片大小
+    quality = quality /100
 
     if (!this.canvas) {
       this.canvas = document.createElement('canvas')
@@ -82,21 +102,34 @@ internal._drawImage = function (image, type, quality, scale) {
     $$canvas.width = width
     $$canvas.height = height
     try {
+      // 完成blob对象的回调函数
+      let done = (blob) => resolve(blob)
       // 1. 清除画布
       ctx.clearRect(0, 0, width, height)
       // 2. 在canvas中绘制图片
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height)
       // 3. 将图片转换成base64
       // NOTE: quality属性只有jpg和webp格式才有效
-      $$canvas.toBlob(blob => resolve(blob), type, quality / 100)
+      if ($$canvas.toBlob) {
+        $$canvas.toBlob(done, type, quality)
+      } else {
+        done(toBlob($$canvas.toDataURL(type, quality)))
+      }
     } catch (ex) {
       reject(ex)
     }
   })
 }
 
+/**
+ * export 压缩
+ * @param {file} file 
+ * @param {number} quality 
+ * @param {number} scale 
+ */
 IQO.prototype.compress = function (file, quality, scale) {
   let type = file.type || 'image/' + file.substr(file.lastIndexOf('.') + 1)
+  let url1
 
   quality = Number(quality)
   if (isNaN(quality) || quality < 0 || quality > 100) {
@@ -108,18 +141,32 @@ IQO.prototype.compress = function (file, quality, scale) {
     scale = 70
   }
 
-  // 创建一个url，
-  let url = this.URL.createObjectURL(file)
-
-  return this._file2Image(url)
+  return this._generateFileURL(file)
+    .then(url => {
+      url1 = url
+      return this._file2Image(url)
+    })
     .then(image => this._drawImage(image, type, quality, scale))
     .then(blob => {
-      this.URL.revokeObjectURL(url)
-      // 与原文件比较大小，取最小的那个文件
-      return blob.size < file.size ? blob : file
+      let result = null
+
+      // 释放url的内存
+      this.URL && this.URL.revokeObjectURL(url1)
+      if (blob && blob.size < file.size) {
+          let date = new Date()
+          blob.lastModified = date.getTime()
+          blob.lastModifiedDate = date
+          blob.name = file.name
+          result = blob
+      } else {
+        result = file
+      }
+
+      return result
     })
     .catch(error => {
-      this.URL.revokeObjectURL(url)
+      // 释放url的内存
+      this.URL && this.URL.revokeObjectURL(url1)
       throw error
     })
 }

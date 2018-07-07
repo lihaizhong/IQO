@@ -29,6 +29,6 @@ export default {
     commonjsPlugin({
       include: 'node_modules/**'
     }),
-    uglify()
+    // uglify()
   ]
 }
