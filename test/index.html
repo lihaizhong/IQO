@@ -9,6 +9,8 @@
 <body>
   <input type="file" id="file">
   <img src="" id="image">
+  <img src="/test/1.jpeg" id="originImage">
+  <img src="" id="compressImage">
   <script src="../dist/iqo.min.js"></script>
   <script>
     var $$file = document.getElementById('file')
@@ -31,6 +33,30 @@
     function test (blob, file) {
       console.log('压缩前：' + file.size)
       console.log('压缩后：' + blob.size)
+    }
+  </script>
+  <script>
+    var $$origin = document.getElementById('originImage')
+    var $$compress = document.getElementById('compressImage')
+
+    $$origin.onload = function () {
+      var $$canvas = document.createElement('canvas')
+      var ctx = $$canvas.getContext('2d')
+
+      var width = $$origin.width
+      var height = $$origin.height
+      $$canvas.width = width
+      $$canvas.height = height
+
+      ctx.drawImage($$origin, 0, 0, width, height, 0, 0, width, height)
+      $$canvas.toBlob(blob => {
+        var iqo = new IQO()
+        iqo.compress(blob, 55, 45)
+          .then(file => {
+            var url = window.URL.createObjectURL(file)
+            $$compress.src = url
+          })
+      }, 'image/jpeg', 1)
     }
   </script>
 </body>

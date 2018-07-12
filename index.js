@@ -53,7 +53,7 @@ internal._generateFileURL = function (file) {
         reject(error)
       }
 
-      fileReader.toDataURL()
+      fileReader.toDataURL(file)
     } else {
       reject(new Error('您的浏览器不支持window.URL和FileReader！'))
     }
@@ -99,8 +99,11 @@ internal._drawImage = function (image, type, quality, scale) {
     let width = image.width * scale
     let height = image.height * scale
 
+    $$canvas.setAttribute('width', width)
+    $$canvas.setAttribute('height', height)
     $$canvas.width = width
     $$canvas.height = height
+
     try {
       // 完成blob对象的回调函数
       let done = (blob) => resolve(blob)
