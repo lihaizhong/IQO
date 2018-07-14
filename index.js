@@ -18,7 +18,9 @@ function IQO (standard) {
   this._URLCompat()
 }
 
-var internal = IQO.prototype = {}
+var internal = IQO.prototype = {
+  constructor: IQO
+}
 
 internal._URLCompat = function () {
   if (window.URL) {
@@ -43,17 +45,17 @@ internal._generateFileURL = function (file) {
     if (this.URL) {
       resolve(this.URL.createObjectURL(file))
     } else if (FileReader) {
-      let fileReader = FileReader()
+      let fileReader = new FileReader()
       
-      fileReader.onload = function (evt) {
-        resolve(evt.target.result)
+      fileReader.onload = function () {
+        resolve(this.result)
       }
 
       fileReader.onerror = function (error) {
         reject(error)
       }
 
-      fileReader.toDataURL(file)
+      fileReader.readAsDataURL(file)
     } else {
       reject(new Error('您的浏览器不支持window.URL和FileReader！'))
     }
@@ -66,11 +68,11 @@ internal._generateFileURL = function (file) {
  */
 internal._file2Image = function (url) {
   return new Promise((resolve, reject) => {
-    let $$image = new Image()
+    let image = new Image()
 
-    $$image.onload = () => resolve($$image)
-    $$image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
-    $$image.src = url
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
+    image.src = url
   })
 }
 
@@ -132,7 +134,7 @@ internal._drawImage = function (image, type, quality, scale) {
  */
 IQO.prototype.compress = function (file, quality, scale) {
   let type = file.type || 'image/' + file.substr(file.lastIndexOf('.') + 1)
-  let url1
+  let url1 = null
 
   quality = Number(quality)
   if (isNaN(quality) || quality < 0 || quality > 100) {

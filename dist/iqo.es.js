@@ -128,7 +128,9 @@ function IQO(standard) {
   this._URLCompat();
 }
 
-var internal = IQO.prototype = {};
+var internal = IQO.prototype = {
+  constructor: IQO
+};
 
 internal._URLCompat = function () {
   if (window.URL) {
@@ -155,17 +157,17 @@ internal._generateFileURL = function (file) {
     if (_this.URL) {
       resolve(_this.URL.createObjectURL(file));
     } else if (FileReader) {
-      var fileReader = FileReader();
+      var fileReader = new FileReader();
 
-      fileReader.onload = function (evt) {
-        resolve(evt.target.result);
+      fileReader.onload = function () {
+        resolve(this.result);
       };
 
       fileReader.onerror = function (error) {
         reject(error);
       };
 
-      fileReader.toDataURL(file);
+      fileReader.readAsDataURL(file);
     } else {
       reject(new Error('您的浏览器不支持window.URL和FileReader！'));
     }
@@ -180,15 +182,15 @@ internal._file2Image = function (url) {
   var _this2 = this;
 
   return new Promise(function (resolve, reject) {
-    var $$image = new Image();
+    var image = new Image();
 
-    $$image.onload = function () {
-      return resolve($$image);
+    image.onload = function () {
+      return resolve(image);
     };
-    $$image.onerror = function () {
+    image.onerror = function () {
       return reject(new Error(_this2.prefix + 'image loading failed!'));
     };
-    $$image.src = url;
+    image.src = url;
   });
 };
 
@@ -256,7 +258,7 @@ IQO.prototype.compress = function (file, quality, scale) {
   var _this4 = this;
 
   var type = file.type || 'image/' + file.substr(file.lastIndexOf('.') + 1);
-  var url1 = void 0;
+  var url1 = null;
 
   quality = Number(quality);
   if (isNaN(quality) || quality < 0 || quality > 100) {
