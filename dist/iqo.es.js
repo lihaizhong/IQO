@@ -133,13 +133,13 @@ var internal = IQO.prototype = {
 };
 
 internal._URLCompat = function () {
-  if (window.URL) {
+  if ('URL' in window) {
     this.URL = window.URL;
-  } else if (window.webkitURL) {
+  } else if ('webkitURL' in window) {
     this.URL = window.webkitURL;
-  } else if (window.mozURL) {
+  } else if ('mozURL' in window) {
     this.URL = window.mozURL;
-  } else if (window.msURL) {
+  } else if ('msURL' in window) {
     this.URL = window.msURL;
   } else {
     this.URL = null;
@@ -156,11 +156,11 @@ internal._generateFileURL = function (file) {
   return new Promise(function (resolve, reject) {
     if (_this.URL) {
       resolve(_this.URL.createObjectURL(file));
-    } else if (FileReader) {
+    } else if ('FileReader' in window) {
       var fileReader = new FileReader();
 
       fileReader.onload = function () {
-        resolve(this.result);
+        resolve(fileReader.result);
       };
 
       fileReader.onerror = function (error) {
@@ -172,6 +172,10 @@ internal._generateFileURL = function (file) {
       reject(new Error('您的浏览器不支持window.URL和FileReader！'));
     }
   });
+};
+
+internal._revokeFileURL = function (url) {
+  this.URL && this.URL.revokeObjectURL(url);
 };
 
 /**
@@ -233,8 +237,10 @@ internal._drawImage = function (image, type, quality, scale) {
       };
       // 1. 清除画布
       ctx.clearRect(0, 0, width, height);
+      ctx.save();
       // 2. 在canvas中绘制图片
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+      ctx.restore();
       // 3. 将图片转换成base64
       // NOTE: quality属性只有jpg和webp格式才有效
       if ($$canvas.toBlob) {
@@ -279,7 +285,7 @@ IQO.prototype.compress = function (file, quality, scale) {
     var result = null;
 
     // 释放url的内存
-    _this4.URL && _this4.URL.revokeObjectURL(url1);
+    _this4._revokeFileURL(url1);
     if (blob && blob.size < file.size) {
       var date = new Date();
       blob.lastModified = date.getTime();
@@ -293,7 +299,7 @@ IQO.prototype.compress = function (file, quality, scale) {
     return result;
   }).catch(function (error) {
     // 释放url的内存
-    _this4.URL && _this4.URL.revokeObjectURL(url1);
+    _this4._revokeFileURL(url1);
     throw error;
   });
 };

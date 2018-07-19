@@ -19,17 +19,17 @@ function IQO (standard) {
 }
 
 var internal = IQO.prototype = {
-  constructor: IQO
+  constructor: IQO 
 }
 
 internal._URLCompat = function () {
-  if (window.URL) {
+  if ('URL' in window) {
     this.URL = window.URL
-  } else if (window.webkitURL) {
+  } else if ('webkitURL' in window) {
     this.URL = window.webkitURL
-  } else if (window.mozURL) {
+  } else if ('mozURL' in window) {
     this.URL = window.mozURL
-  } else if (window.msURL) {
+  } else if ('msURL' in window) {
     this.URL = window.msURL
   } else {
     this.URL = null
@@ -44,11 +44,11 @@ internal._generateFileURL = function (file) {
   return new Promise((resolve, reject) => {
     if (this.URL) {
       resolve(this.URL.createObjectURL(file))
-    } else if (FileReader) {
+    } else if ('FileReader' in window) {
       let fileReader = new FileReader()
       
       fileReader.onload = function () {
-        resolve(this.result)
+        resolve(fileReader.result)
       }
 
       fileReader.onerror = function (error) {
@@ -60,6 +60,10 @@ internal._generateFileURL = function (file) {
       reject(new Error('您的浏览器不支持window.URL和FileReader！'))
     }
   })
+}
+
+internal._revokeFileURL = function (url) {
+  this.URL && this.URL.revokeObjectURL(url)
 }
 
 /**
@@ -88,7 +92,7 @@ internal._drawImage = function (image, type, quality, scale) {
     // OPTIMIZE: 缩小体积以减小图片大小
     scale = image.width < this.standard && image.height < this.standard ? 1 : scale / 100
     // OPTIMIZE: 减少质量以减小图片大小
-    quality = quality /100
+    quality = quality / 100
 
     if (!this.canvas) {
       this.canvas = document.createElement('canvas')
@@ -111,8 +115,10 @@ internal._drawImage = function (image, type, quality, scale) {
       let done = (blob) => resolve(blob)
       // 1. 清除画布
       ctx.clearRect(0, 0, width, height)
+      ctx.save()
       // 2. 在canvas中绘制图片
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height)
+      ctx.restore()
       // 3. 将图片转换成base64
       // NOTE: quality属性只有jpg和webp格式才有效
       if ($$canvas.toBlob) {
@@ -139,7 +145,7 @@ IQO.prototype.compress = function (file, quality, scale) {
   quality = Number(quality)
   if (isNaN(quality) || quality < 0 || quality > 100) {
     quality = 95
-  }
+  }   
 
   scale = Number(scale)
   if (isNaN(scale) || scale < 0 || scale > 100) {
@@ -156,7 +162,7 @@ IQO.prototype.compress = function (file, quality, scale) {
       let result = null
 
       // 释放url的内存
-      this.URL && this.URL.revokeObjectURL(url1)
+      this._revokeFileURL(url1)
       if (blob && blob.size < file.size) {
           let date = new Date()
           blob.lastModified = date.getTime()
@@ -171,7 +177,7 @@ IQO.prototype.compress = function (file, quality, scale) {
     })
     .catch(error => {
       // 释放url的内存
-      this.URL && this.URL.revokeObjectURL(url1)
+      this._revokeFileURL(url1)
       throw error
     })
 }
