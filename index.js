@@ -19,7 +19,7 @@ function IQO (standard) {
 }
 
 var internal = IQO.prototype = {
-  constructor: IQO 
+  constructor: IQO
 }
 
 internal._URLCompat = function () {
@@ -36,27 +36,44 @@ internal._URLCompat = function () {
   }
 }
 
+internal._generateFileURLByURL = function (file) {
+  // console.log('使用window.URL生成URL')
+  this.URL.createObjectURL(file)
+}
+
+internal._generateFileURLByFileReader = function (file, success, fail) {
+  // console.log('使用FileReader生成URL')
+  let fileReader = new FileReader()
+
+  fileReader.onload = function () {
+    success(fileReader.result)
+  }
+
+  fileReader.onerror = function (error) {
+    // console.log('FileReader读取文件失败')
+    fail(error)
+  }
+
+  fileReader.readAsDataURL(file)
+}
+
 /**
  * 文件类型转换为url
- * @param {file}} file 
+ * @param {file}} file
  */
 internal._generateFileURL = function (file) {
   return new Promise((resolve, reject) => {
+    // console.log('将文件类型转换成URL')
     if (this.URL) {
-      resolve(this.URL.createObjectURL(file))
+      resolve(this._generateFileURLByURL(file))
     } else if ('FileReader' in window) {
-      let fileReader = new FileReader()
-      
-      fileReader.onload = function () {
-        resolve(fileReader.result)
-      }
-
-      fileReader.onerror = function (error) {
+      this._generateFileURLByFileReader(file, function (url) {
+        resolve(url)
+      }, function (error) {
         reject(error)
-      }
-
-      fileReader.readAsDataURL(file)
+      })
     } else {
+      // console.log('您的浏览器不支持window.URL和FileReader！')
       reject(new Error('您的浏览器不支持window.URL和FileReader！'))
     }
   })
@@ -68,27 +85,33 @@ internal._revokeFileURL = function (url) {
 
 /**
  * 文件类型转换为图片类型
- * @param {base64} url 
+ * @param {base64} url
  */
 internal._file2Image = function (url) {
   return new Promise((resolve, reject) => {
+    console.log('加载图片')
     let image = new Image()
 
     image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error(this.prefix + 'image loading failed!'))
+    image.onerror = (error) => {
+      console.log(this.prefix + '图片加载失败！', error)
+      reject(error)
+    }
+
     image.src = url
   })
 }
 
 /**
  * 图片绘制，压缩
- * @param {image} image 
- * @param {string} type 
- * @param {number} quality 
- * @param {number} scale 
+ * @param {image} image
+ * @param {string} type
+ * @param {number} quality
+ * @param {number} scale
  */
 internal._drawImage = function (image, type, quality, scale) {
   return new Promise((resolve, reject) => {
+    // console.log('开始画图')
     // OPTIMIZE: 缩小体积以减小图片大小
     scale = image.width < this.standard && image.height < this.standard ? 1 : scale / 100
     // OPTIMIZE: 减少质量以减小图片大小
@@ -110,6 +133,7 @@ internal._drawImage = function (image, type, quality, scale) {
     $$canvas.width = width
     $$canvas.height = height
 
+    // console.log('是否支持toBlob：' + (typeof $$canvas.toBlob === 'function'))
     try {
       // 完成blob对象的回调函数
       let done = (blob) => resolve(blob)
@@ -134,9 +158,9 @@ internal._drawImage = function (image, type, quality, scale) {
 
 /**
  * export 压缩
- * @param {file} file 
- * @param {number} quality 
- * @param {number} scale 
+ * @param {file} file
+ * @param {number} quality
+ * @param {number} scale
  */
 IQO.prototype.compress = function (file, quality, scale) {
   let type = file.type || 'image/' + file.substr(file.lastIndexOf('.') + 1)
@@ -145,7 +169,7 @@ IQO.prototype.compress = function (file, quality, scale) {
   quality = Number(quality)
   if (isNaN(quality) || quality < 0 || quality > 100) {
     quality = 95
-  }   
+  }
 
   scale = Number(scale)
   if (isNaN(scale) || scale < 0 || scale > 100) {
@@ -164,21 +188,24 @@ IQO.prototype.compress = function (file, quality, scale) {
       // 释放url的内存
       this._revokeFileURL(url1)
       if (blob && blob.size < file.size) {
-          let date = new Date()
-          blob.lastModified = date.getTime()
-          blob.lastModifiedDate = date
-          blob.name = file.name
-          result = blob
+        let date = new Date()
+        blob.lastModified = date.getTime()
+        blob.lastModifiedDate = date
+        blob.name = file.name
+        result = blob
       } else {
         result = file
       }
+      // console.log(Object.prototype.toString.call(result))
 
       return result
     })
     .catch(error => {
       // 释放url的内存
       this._revokeFileURL(url1)
-      throw error
+      // console.log('文件压缩失败！', error)
+      console.error(error)
+      return file
     })
 }
 

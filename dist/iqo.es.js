@@ -146,29 +146,46 @@ internal._URLCompat = function () {
   }
 };
 
+internal._generateFileURLByURL = function (file) {
+  // console.log('使用window.URL生成URL')
+  this.URL.createObjectURL(file);
+};
+
+internal._generateFileURLByFileReader = function (file, success, fail) {
+  // console.log('使用FileReader生成URL')
+  var fileReader = new FileReader();
+
+  fileReader.onload = function () {
+    success(fileReader.result);
+  };
+
+  fileReader.onerror = function (error) {
+    // console.log('FileReader读取文件失败')
+    fail(error);
+  };
+
+  fileReader.readAsDataURL(file);
+};
+
 /**
  * 文件类型转换为url
- * @param {file}} file 
+ * @param {file}} file
  */
 internal._generateFileURL = function (file) {
   var _this = this;
 
   return new Promise(function (resolve, reject) {
+    // console.log('将文件类型转换成URL')
     if (_this.URL) {
-      resolve(_this.URL.createObjectURL(file));
+      resolve(_this._generateFileURLByURL(file));
     } else if ('FileReader' in window) {
-      var fileReader = new FileReader();
-
-      fileReader.onload = function () {
-        resolve(fileReader.result);
-      };
-
-      fileReader.onerror = function (error) {
+      _this._generateFileURLByFileReader(file, function (url) {
+        resolve(url);
+      }, function (error) {
         reject(error);
-      };
-
-      fileReader.readAsDataURL(file);
+      });
     } else {
+      // console.log('您的浏览器不支持window.URL和FileReader！')
       reject(new Error('您的浏览器不支持window.URL和FileReader！'));
     }
   });
@@ -180,35 +197,39 @@ internal._revokeFileURL = function (url) {
 
 /**
  * 文件类型转换为图片类型
- * @param {base64} url 
+ * @param {base64} url
  */
 internal._file2Image = function (url) {
   var _this2 = this;
 
   return new Promise(function (resolve, reject) {
+    console.log('加载图片');
     var image = new Image();
 
     image.onload = function () {
       return resolve(image);
     };
-    image.onerror = function () {
-      return reject(new Error(_this2.prefix + 'image loading failed!'));
+    image.onerror = function (error) {
+      console.log(_this2.prefix + '图片加载失败！', error);
+      reject(error);
     };
+
     image.src = url;
   });
 };
 
 /**
  * 图片绘制，压缩
- * @param {image} image 
- * @param {string} type 
- * @param {number} quality 
- * @param {number} scale 
+ * @param {image} image
+ * @param {string} type
+ * @param {number} quality
+ * @param {number} scale
  */
 internal._drawImage = function (image, type, quality, scale) {
   var _this3 = this;
 
   return new Promise(function (resolve, reject) {
+    // console.log('开始画图')
     // OPTIMIZE: 缩小体积以减小图片大小
     scale = image.width < _this3.standard && image.height < _this3.standard ? 1 : scale / 100;
     // OPTIMIZE: 减少质量以减小图片大小
@@ -230,6 +251,7 @@ internal._drawImage = function (image, type, quality, scale) {
     $$canvas.width = width;
     $$canvas.height = height;
 
+    // console.log('是否支持toBlob：' + (typeof $$canvas.toBlob === 'function'))
     try {
       // 完成blob对象的回调函数
       var done = function done(blob) {
@@ -256,9 +278,9 @@ internal._drawImage = function (image, type, quality, scale) {
 
 /**
  * export 压缩
- * @param {file} file 
- * @param {number} quality 
- * @param {number} scale 
+ * @param {file} file
+ * @param {number} quality
+ * @param {number} scale
  */
 IQO.prototype.compress = function (file, quality, scale) {
   var _this4 = this;
@@ -295,12 +317,15 @@ IQO.prototype.compress = function (file, quality, scale) {
     } else {
       result = file;
     }
+    // console.log(Object.prototype.toString.call(result))
 
     return result;
   }).catch(function (error) {
     // 释放url的内存
     _this4._revokeFileURL(url1);
-    throw error;
+    // console.log('文件压缩失败！', error)
+    console.error(error);
+    return file;
   });
 };
 
