@@ -38,7 +38,7 @@ internal._URLCompat = function () {
 
 internal._generateFileURLByURL = function (file) {
   // console.log('使用window.URL生成URL')
-  this.URL.createObjectURL(file)
+  return this.URL.createObjectURL(file)
 }
 
 internal._generateFileURLByFileReader = function (file, success, fail) {
@@ -103,6 +103,30 @@ internal._file2Image = function (url) {
 }
 
 /**
+ * 获取到canvas每一个像素，然后检查这张图片是否是黑色的图片
+ * 注：不对黑色的图片进行压缩
+ * @param {array} imageData 
+ */
+internal._checkImageData = function (imageData) {
+  let len = imageData ? imageData.length : 0
+  let otherData = 0
+
+  if (len) {
+    for (let i = 0; i < len; i += 4) {
+      let r = imageData[i]
+      let g = imageData[i + 1]
+      let b = imageData[i + 2]
+
+      if (r !== 0 && g !== 0 && b !== 0) {
+        otherData++
+      }
+    }
+  }
+
+  return otherData !== 0
+}
+
+/**
  * 图片绘制，压缩
  * @param {image} image
  * @param {string} type
@@ -143,7 +167,12 @@ internal._drawImage = function (image, type, quality, scale) {
       // 2. 在canvas中绘制图片
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height)
       ctx.restore()
-      // 3. 将图片转换成base64
+      let imageData = ctx.getImageData(0, 0, width, height)
+      if (!this._checkImageData(imageData)) {
+        reject(new Error('不对全黑图片进行压缩操作！'))
+        return
+      }
+      // 4. 将图片转换成base64
       // NOTE: quality属性只有jpg和webp格式才有效
       if ($$canvas.toBlob) {
         $$canvas.toBlob(done, type, quality)
