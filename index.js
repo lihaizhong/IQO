@@ -206,17 +206,15 @@ IQO.prototype.compress = function (file, quality, scale) {
   }
 
   return this._generateFileURL(file)
-    .then(url => {
-      url1 = url
-      return this._file2Image(url)
-    })
+    .then(url => this._file2Image((url1 = url)))
     .then(image => this._drawImage(image, type, quality, scale))
     .then(blob => {
       let result = null
 
       // 释放url的内存
       this._revokeFileURL(url1)
-      if (blob && blob.size < file.size) {
+      // 适配结果图片
+      if (blob && blob.size > 0 && blob.size < file.size) {
         let date = new Date()
         blob.lastModified = date.getTime()
         blob.lastModifiedDate = date
