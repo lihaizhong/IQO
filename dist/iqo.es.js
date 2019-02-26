@@ -328,8 +328,7 @@ IQO.prototype.compress = function (file, quality, scale) {
   }
 
   return this._generateFileURL(file).then(function (url) {
-    url1 = url;
-    return _this4._file2Image(url);
+    return _this4._file2Image(url1 = url);
   }).then(function (image) {
     return _this4._drawImage(image, type, quality, scale);
   }).then(function (blob) {
@@ -337,7 +336,8 @@ IQO.prototype.compress = function (file, quality, scale) {
 
     // 释放url的内存
     _this4._revokeFileURL(url1);
-    if (blob && blob.size < file.size) {
+    // 适配结果图片
+    if (blob && blob.size > 0 && blob.size < file.size) {
       var date = new Date();
       blob.lastModified = date.getTime();
       blob.lastModifiedDate = date;
