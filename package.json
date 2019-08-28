@@ -1,6 +1,6 @@
 {
   "name": "iqo",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "图片压缩",
   "main": "index.js",
   "browser": "dist/iqo.min.js",
