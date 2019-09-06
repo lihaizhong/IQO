@@ -122,7 +122,13 @@ internal._drawImage = function(image, type, quality, scale) {
     quality = quality / 100
 
     if (!this.canvas) {
+      // const iframe = document.createElement('iframe')
+      // iframe.style.cssText = 'display: none;'
+      // document.body.appendChild(iframe)
+
       this.canvas = document.createElement('canvas')
+      // iframe.document.body.appendChild(this.canvas)
+
       this.ctx = this.canvas.getContext('2d')
     }
 
@@ -152,6 +158,8 @@ internal._drawImage = function(image, type, quality, scale) {
       } else {
         resolve(dataURLtoBlob($$canvas.toDataURL(type, quality)))
       }
+
+      ctx.clearRect(0, 0, width, height)
     } catch (ex) {
       reject(ex)
     }
