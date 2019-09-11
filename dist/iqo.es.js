@@ -243,7 +243,11 @@ internal._drawImage = function (image, type, quality, scale) {
     quality = quality / 100;
 
     if (!_this3.canvas) {
-      _this3.canvas = document.createElement('canvas');
+      // const iframe = document.createElement('iframe')
+      // iframe.style.cssText = 'display: none;'
+      // document.body.appendChild(iframe)
+      _this3.canvas = document.createElement('canvas'); // iframe.document.body.appendChild(this.canvas)
+
       _this3.ctx = _this3.canvas.getContext('2d');
     }
 
@@ -271,6 +275,8 @@ internal._drawImage = function (image, type, quality, scale) {
       } else {
         resolve(canvasToBlob($$canvas.toDataURL(type, quality)));
       }
+
+      ctx.clearRect(0, 0, width, height);
     } catch (ex) {
       reject(ex);
     }
