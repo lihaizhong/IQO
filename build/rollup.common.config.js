@@ -1,3 +1,5 @@
+import path from 'path'
+import BannerPlugin from 'rollup-plugin-banner'
 import JSONPlugin from 'rollup-plugin-json'
 import babelPlugin from 'rollup-plugin-babel'
 import resolvePlugin from 'rollup-plugin-node-resolve'
@@ -29,6 +31,10 @@ export default {
     commonjsPlugin({
       include: 'node_modules/**'
     }),
-    uglify()
+    uglify(),
+    BannerPlugin({
+      file: path.resolve(__dirname, 'banner.txt'),
+      encoding: 'utf-8'
+    })
   ]
 }
