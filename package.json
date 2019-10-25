@@ -1,6 +1,6 @@
 {
   "name": "iqo",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "图片压缩",
   "main": "index.js",
   "browser": "dist/iqo.min.js",
@@ -16,9 +16,17 @@
     "build:es": "rollup -c build/rollup.es.config.js",
     "build": "npm run build:umd && npm run build:es"
   },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
+    "husky": "^3.0.9",
     "rollup": "^1.25.2",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-banner": "^0.2.1",
