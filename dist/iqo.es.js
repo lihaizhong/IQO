@@ -299,13 +299,22 @@ internal._drawImage = function (image, type, quality, scale) {
 IQO.prototype.compress = function (file, quality, scale) {
   var _this4 = this;
 
-  var type = file.type || 'image/' + file.substr(file.lastIndexOf('.') + 1);
-  var generatedUrl = null;
+  var fileName = file.name || '';
+  var fileType = file.type; // 生成浏览器可访问的url
+
+  var generatedUrl = null; // 文件类型没有获取到
+
+  if (!fileType) {
+    fileType = fileName ? 'image/' + fileName.substr(fileName.lastIndexOf('.') + 1) : 'image/jpg';
+  } // 文件的压缩质量
+
+
   quality = Number(quality);
 
   if (isNaN(quality) || quality <= 0 || quality > 100) {
     quality = 70;
-  }
+  } // 文件的缩放比例
+
 
   scale = Number(scale);
 
@@ -313,11 +322,14 @@ IQO.prototype.compress = function (file, quality, scale) {
     scale = 70;
   }
 
-  return this._generateFileURL(file).then(function (url) {
+  return this._generateFileURL(file) // 将文件转化为图片
+  .then(function (url) {
     return _this4._file2Image(generatedUrl = url);
-  }).then(function (image) {
-    return _this4._drawImage(image, type, quality, scale);
-  }).then(function (blob) {
+  }) // 在canvas上绘制图片
+  .then(function (image) {
+    return _this4._drawImage(image, fileType, quality, scale);
+  }) // 比较生成的图片与原图的大小
+  .then(function (blob) {
     // 适配结果图片
     if (blob && blob.size > 0 && blob.size < file.size) {
       var date = new Date();
