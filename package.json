@@ -1,6 +1,6 @@
 {
   "name": "iqo",
-  "version": "0.1.18",
+  "version": "0.1.20",
   "description": "图片压缩",
   "main": "index.js",
   "browser": "dist/iqo.min.js",
@@ -14,7 +14,8 @@
   "scripts": {
     "build:umd": "rollup -c build/rollup.common.config.js",
     "build:es": "rollup -c build/rollup.es.config.js",
-    "build": "npm run build:umd && npm run build:es"
+    "build": "npm run build:umd && npm run build:es",
+    "commit": "standard-version"
   },
   "husky": {
     "hooks": {
