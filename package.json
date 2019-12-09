@@ -19,7 +19,7 @@
     "build:umd": "rollup -c build/rollup.common.config.js",
     "build:es": "rollup -c build/rollup.es.config.js",
     "build": "npm run build:umd && npm run build:es",
-    "version": "standard-version"
+    "version": "standard-version && git add CHANGELOG.md"
   },
   "husky": {
     "hooks": {
