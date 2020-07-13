@@ -39,7 +39,7 @@
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-uglify": "^6.0.3",
-    "standard-version": "^7.0.1"
+    "standard-version": "^8.0.1"
   },
   "dependencies": {
     "blueimp-canvas-to-blob": "^3.16.0"
